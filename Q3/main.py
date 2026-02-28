@@ -3,7 +3,17 @@ import ai_error_analysis
 from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+# Add this block right after app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # Allow all origins
+    allow_methods=["*"],      # Allow GET, POST, etc.
+    allow_headers=["*"],
+)
 
 class Input(BaseModel):
     code:str
