@@ -9,7 +9,7 @@ load_dotenv()   # ← This reads .env and sets all variables automatically
 class ErrorAnalysis(BaseModel):
     error_lines: List[int]  # Line numbers with errors
 
-client = genai.Client(api_key=os.environ.get("AIzaSyD0PwfnX4mG50YXiI8x0uTguochDi9QTgY"))
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 def analyze_error_with_ai(code: str, traceback: str) -> List[int]:
     """
@@ -30,7 +30,7 @@ Return the line number(s) where the error is located.
 """
 
     response = client.models.generate_content(
-        model='gemini-2.5-flash-exp',
+        model='gemini-2.5-flash',  # Use the latest model available
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
