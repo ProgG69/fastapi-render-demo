@@ -9,7 +9,7 @@ load_dotenv()   # ← This reads .env and sets all variables automatically
 class ErrorAnalysis(BaseModel):
     error_lines: List[int]  # Line numbers with errors
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.environ.get("AIzaSyAZBS5rvJVWaDzNoteCriSz1OQluVjxoGM"))
 
 def analyze_error_with_ai(code: str, traceback: str) -> List[int]:
     """
