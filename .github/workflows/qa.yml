@@ -25,4 +25,4 @@ jobs:
           npx playwright install chromium --with-deps
 
       - name: Run Playwright scraper and print total
-        run: node scrape.js
+        run: node Q13/scrape.js
