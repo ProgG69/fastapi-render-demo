@@ -1,0 +1,1 @@
+[![Daily Scheduled Commit](https://github.com/ProgG69/fastapi-render-demo/actions/workflows/daily-commit.yml/badge.svg)](https://github.com/ProgG69/fastapi-render-demo/actions/workflows/daily-commit.yml)
