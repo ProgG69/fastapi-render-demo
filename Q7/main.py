@@ -42,9 +42,18 @@ def download_audio(video_url: str, output_path: str) -> str:
     cmd = [
         "yt-dlp",
         "--no-playlist",
-        "-x",                        # Extract audio only
-        "--audio-format", "mp3",     # Convert to mp3
-        "--audio-quality", "0",      # Best quality
+        "-x",
+        "--audio-format", "mp3",
+        "--audio-quality", "0",
+        # Use mobile web client — bypasses JS runtime requirement entirely
+        "--extractor-args", "youtube:player_client=mweb",
+        # Spoof a real mobile browser to avoid 429 rate limiting
+        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36",
+        "--add-header", "Accept-Language:en-US,en;q=0.9",
+        # Retry and sleep to handle transient 429s
+        "--retries", "5",
+        "--sleep-requests", "2",
+        "--no-check-certificates",
         "-o", output_path,
         video_url,
     ]
