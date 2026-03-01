@@ -8,10 +8,21 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import google.generativeai as genai
 
+from fastapi.middleware.cors import CORSMiddleware
+
+
 app = FastAPI(title="Video Timestamp Search API")
 
+# Add this block right after app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # Allow all origins
+    allow_methods=["*"],      # Allow GET, POST, etc.
+    allow_headers=["*"],
+)
+
 # Configure Gemini
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("AIzaSyAZBS5rvJVWaDzNoteCriSz1OQluVjxoGM")
 genai.configure(api_key=GEMINI_API_KEY)
 
 
