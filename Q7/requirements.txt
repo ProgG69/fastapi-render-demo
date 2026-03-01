@@ -2,4 +2,4 @@ fastapi
 uvicorn
 pydantic
 google-generativeai
-yt-dlp
+yt-dlp>=2024.11.18
