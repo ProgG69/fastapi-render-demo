@@ -6,7 +6,7 @@ import time
 import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import google.genai as genai
+import google.generativeai as genai
 
 from fastapi.middleware.cors import CORSMiddleware
 
