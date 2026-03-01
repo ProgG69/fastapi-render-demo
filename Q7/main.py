@@ -6,7 +6,7 @@ import time
 import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import google.generativeai as genai
+import google.genai as genai
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,7 +26,7 @@ app.add_middleware(
 # API key string was (incorrectly) used as the env var name.
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY_2")
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY_2)
+    genai.configure(api_key=GEMINI_API_KEY)
 
 
 class AskRequest(BaseModel):
