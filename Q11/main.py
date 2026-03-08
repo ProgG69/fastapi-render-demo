@@ -1,100 +1,57 @@
-import sys
-import json
-import time
-import os
-from google import genai
-from google.genai import types
+from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 
+app = FastAPI()
 
-# ── Data models ──────────────────────────────────────────────
-class Attendee(BaseModel):
-    name: str
-    date: str          # format: dd/mm/yyyy
+# --- Step A: Define what the INPUT looks like ---
+class SentimentRequest(BaseModel):
+    sentences: List[str]
 
-class AttendeeList(BaseModel):
-    attendees: List[Attendee]
+# --- Step B: Define what ONE result looks like ---
+class SentimentResult(BaseModel):
+    sentence: str
+    sentiment: str
 
-# ── Main logic ───────────────────────────────────────────────
-def extract_attendees(video_path: str) -> List[dict]:
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+# --- Step C: Define what the OUTPUT looks like ---
+class SentimentResponse(BaseModel):
+    results: List[SentimentResult]
 
-    MY_NEW_KEY = "AIzaSyBUBv7UmCT68IA7cCE6c2G-4HRPCQeY_CA"
+# --- Step D: Keyword lists for rule-based analysis ---
+HAPPY_WORDS = [
+    "love", "great", "amazing", "awesome", "excellent", "good", "happy",
+    "fantastic", "wonderful", "best", "beautiful", "joy", "excited",
+    "glad", "pleased", "enjoy", "like", "brilliant", "superb", "perfect",
+    "delightful", "grateful", "thankful", "positive", "fun", "nice"
+]
 
-    client = genai.Client(api_key=MY_NEW_KEY)
+SAD_WORDS = [
+    "hate", "terrible", "awful", "bad", "sad", "horrible", "worst",
+    "disgusting", "ugly", "angry", "upset", "disappoint", "disappoint",
+    "frustrated", "miserable", "dreadful", "annoying", "boring", "fail",
+    "failure", "poor", "useless", "broken", "wrong", "unhappy", "depressed",
+    "hurt", "painful", "loss", "unfortunately", "regret", "sorry"
+]
 
-    # Step 1: Upload video to Gemini Files API
-    print(f"Uploading {video_path}...")
-    video_file = client.files.upload(
-        file=video_path,
-        config={"mime_type": "video/webm"}
-    )
-    print(f"Uploaded: {video_file.name}")
+# --- Step E: The function that decides the sentiment ---
+def analyze_sentiment(sentence: str) -> str:
+    lower = sentence.lower()  # Make it lowercase so "LOVE" matches "love"
+    
+    happy_score = sum(1 for word in HAPPY_WORDS if word in lower)
+    sad_score = sum(1 for word in SAD_WORDS if word in lower)
+    
+    if happy_score > sad_score:
+        return "happy"
+    elif sad_score > happy_score:
+        return "sad"
+    else:
+        return "neutral"
 
-    # Step 2: Wait until Gemini finishes processing the video
-    print("Waiting for video to be processed...")
-    while video_file.state.name == "PROCESSING":
-        time.sleep(3)
-        video_file = client.files.get(name=video_file.name)
-        print(f"  State: {video_file.state.name}")
-
-    if video_file.state.name == "FAILED":
-        raise ValueError("Video processing failed!")
-
-    print("Video ready. Extracting attendees...")
-
-    # Step 3: Ask Gemini to extract all attendees with structured output
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-lite",
-        contents=[
-            video_file,
-            """Watch this entire check-in video carefully.
-Extract ALL attendee name and check-in date pairs shown on screen.
-- Capture every single entry shown throughout the full video.
-- Date format must be dd/mm/yyyy (e.g. 03/07/2025).
-- Return exactly 20 attendees if 20 are shown."""
-        ],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "attendees": types.Schema(
-                        type=types.Type.ARRAY,
-                        items=types.Schema(
-                            type=types.Type.OBJECT,
-                            properties={
-                                "name": types.Schema(type=types.Type.STRING),
-                                "date": types.Schema(type=types.Type.STRING)
-                            },
-                            required=["name", "date"]
-                        )
-                    )
-                },
-                required=["attendees"]
-            )
-        )
-    )
-
-    # Step 4: Parse and return
-    result = AttendeeList.model_validate_json(response.text)
-    return [{"name": a.name, "date": a.date} for a in result.attendees]
-
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python main.py attendee_checkin.webm")
-        sys.exit(1)
-
-    video_path = sys.argv[1]
-    attendees = extract_attendees(video_path)
-
-    # Print final JSON — copy this into the assignment field
-    print("\n── FINAL JSON OUTPUT ──")
-    print(json.dumps(attendees, indent=2))
-
-    # Also save to file so you don't lose it
-    with open("attendees_output.json", "w") as f:
-        json.dump(attendees, f, indent=2)
-    print("\nSaved to attendees_output.json")
+# --- Step F: The actual API endpoint ---
+@app.post("/sentiment", response_model=SentimentResponse)
+def get_sentiment(request: SentimentRequest):
+    results = []
+    for sentence in request.sentences:
+        sentiment = analyze_sentiment(sentence)
+        results.append(SentimentResult(sentence=sentence, sentiment=sentiment))
+    return SentimentResponse(results=results)
